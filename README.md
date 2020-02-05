@@ -1,3 +1,16 @@
-# Thesis-Posters-and-Presentations
-Repository contains my thesis, as well as posters and presentations presented during my thesis.
+# Thesis
+Repository contains the following:
+- Final thesis.
+- Code used while working.  
+- Posters and presentations presented during my thesis.
+
+Thesis subject: 
+---------------
+
+Abstract:
+---------------
+
+
+
+
 
