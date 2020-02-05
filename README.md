@@ -13,7 +13,7 @@ Repository contains the following:
  Thesis submitted towards the M.Sc. degree in Bioinformatics \
  in Tel-Aviv University \
  by \
- Nomi Hadar \
+ Nomi Hadar \ 
 
  The research was performed in the Department \
  of Molecular Biology and Ecology of Plants \
