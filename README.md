@@ -4,7 +4,23 @@ Repository contains the following:
 - Code used while working.  
 - Posters and presentations presented during the master.
 
-**Thesis title: Towards realistic sequence simulations for the reconstruction of mega phylogenies**
+**Thesis details:**
+
+**Towards realistic sequence simulations for the reconstruction of mega phylogenies**
+
+Thesis submitted towards the M.Sc. degree in Bioinformatics
+in Tel-Aviv University
+by
+Nomi Hadar
+
+The research was performed in the Department
+of Molecular Biology and Ecology of Plants
+
+Under the supervision of
+**Prof. Itay Mayrose**
+
+June 2018
+
 
 **Abstract:**
 
