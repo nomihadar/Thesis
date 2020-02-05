@@ -14,7 +14,6 @@ Repository contains the following:
  in Tel-Aviv University \
  by \
  Nomi Hadar \
-</p>
 
  The research was performed in the Department \
  of Molecular Biology and Ecology of Plants \
