@@ -1,8 +1,8 @@
 # Thesis
 Repository contains the following:
-- Final thesis.
+- Thesis file.
 - Code used while working.  
-- Posters and presentations presented during my thesis.
+- Posters and presentations presented during the master.
 
 **Thesis title: Towards realistic sequence simulations for the reconstruction of mega phylogenies**
 
