@@ -6,8 +6,8 @@ Repository contains the following:
 
 
 <p align="center">
- **Towards realistic sequence simulations for the\
- reconstruction of mega phylogenies**<br/>
+ **Towards realistic sequence simulations for the**<br/>
+ **reconstruction of mega phylogenies**<br/>
 </p>
 
 <p align="center">
@@ -18,12 +18,12 @@ Repository contains the following:
 </p>
 
 <p align="center">
- The research was performed in the Department\
+ The research was performed in the Department<br/>
  of Molecular Biology and Ecology of Plants<br/>
 </p>
 
 <p align="center">
- Under the supervision of\
+ Under the supervision of<br/>
  **Prof. Itay Mayrose**<br/>
 </p>
 
