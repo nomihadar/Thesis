@@ -4,28 +4,24 @@ Repository contains the following:
 - Code used while working.  
 - Posters and presentations presented during the master.
 
-**Thesis details:**
-
-
-
 
 <p align="center">
 
- **Towards realistic sequence simulations for the <br/>
- reconstruction of mega phylogenies** <br/><br/>
- Thesis submitted towards the M.Sc. degree in Bioinformatics <br/> 
- in Tel-Aviv University <br/> 
- by  <br/>
- Nomi Hadar <br/> 
+    **Towards realistic sequence simulations for the <br/>
+    reconstruction of mega phylogenies** <br/><br/>
+    Thesis submitted towards the M.Sc. degree in Bioinformatics <br/> 
+    in Tel-Aviv University <br/> 
+    by  <br/>
+    Nomi Hadar <br/> 
 
 
- The research was performed in the Department <br/> 
- of Molecular Biology and Ecology of Plants <br/> 
+    The research was performed in the Department <br/> 
+    of Molecular Biology and Ecology of Plants <br/> 
 
- Under the supervision of <br/> 
- **Prof. Itay Mayrose** <br/> 
+    Under the supervision of <br/> 
+    **Prof. Itay Mayrose** <br/> 
 
- June 2018 <br/> 
+    June 2018 <br/> 
 
 </p>
 
