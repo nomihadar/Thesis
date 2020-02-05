@@ -6,8 +6,7 @@ Repository contains the following:
 
 
 <p align="center">
- <p align="center"><h2>Towards realistic sequence simulations for the<br/></h2></p>
- <h2>reconstruction of mega phylogenies</h2><br/>
+<h2>Towards realistic sequence simulations for the reconstruction of mega phylogenies<br/></h2>
 </p>
 
 <p align="center">
@@ -24,7 +23,7 @@ Repository contains the following:
 
 <p align="center">
  Under the supervision of<br/>
- **Prof. Itay Mayrose**<br/>
+ <strong>Prof. Itay Mayrose<strong/><br/>
 </p>
 
 <p align="center">
