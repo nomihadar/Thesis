@@ -7,8 +7,9 @@ Repository contains the following:
 
 <p align="center">
 
- **Towards realistic sequence simulations for the <br/>
- reconstruction of mega phylogenies** <br/><br/>
+ **Towards realistic sequence simulations for the\
+ reconstruction of mega phylogenies**\
+ 
  Thesis submitted towards the M.Sc. degree in Bioinformatics <br/> 
  in Tel-Aviv University <br/> 
  by  <br/>
