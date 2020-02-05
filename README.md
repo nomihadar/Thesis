@@ -23,7 +23,7 @@ Repository contains the following:
 
 <p align="center">
  Under the supervision of<br/>
- <strong>Prof. Itay Mayrose<strong/><br/>
+ <strong>Prof. Itay Mayrose</strong><br/>
 </p>
 
 <p align="center">
