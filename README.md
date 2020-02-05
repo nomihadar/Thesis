@@ -8,21 +8,21 @@ Repository contains the following:
 <p align="center">
 
  **Towards realistic sequence simulations for the\
- reconstruction of mega phylogenies**\
+ reconstruction of mega phylogenies** \
  
- Thesis submitted towards the M.Sc. degree in Bioinformatics <br/> 
- in Tel-Aviv University <br/> 
- by  <br/>
- Nomi Hadar <br/> 
+ Thesis submitted towards the M.Sc. degree in Bioinformatics \
+ in Tel-Aviv University \
+ by \
+ Nomi Hadar \
 </p>
 
- The research was performed in the Department <br/> 
- of Molecular Biology and Ecology of Plants <br/> 
+ The research was performed in the Department \
+ of Molecular Biology and Ecology of Plants \
 
- Under the supervision of <br/> 
- **Prof. Itay Mayrose** <br/> 
+ Under the supervision of \
+ **Prof. Itay Mayrose** \
 
- June 2018 <br/> 
+ June 2018 \
 
 </p>
 
