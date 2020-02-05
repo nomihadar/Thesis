@@ -1,0 +1,31 @@
+	
+works:
+
+connect to one of the nodes
+cd to the directory I want to back up	
+rsync -avz --progress . nomihadar@132.66.45.47:/share/homes/nomihadar/backup_jekyl/
+	
+	
+#####################################################################
+	
+my password: nomihadar1
+
+1. Login using MobaXterm and SSH to the QNAP with your user
+> ssh nomihadar@132.66.45.47
+
+2. Create new directory for backups
+> mkdir backups_jekyl
+> cd backups_jekyl
+
+3. Rsync jekyl and QNAP [note it can be very long process on the first times]
+> rsync -avz --progress nomihadar@hyde.tau.ac.il:/groups/itay_mayrose/nomihadar/ .  
+# [This option will not delete on the QNAP files that are not present lecs2]
+
+> rsync -avz --progress --delete haimash@hyde.tau.ac.il:/groups/pupko/haimash/ .  
+# [This option will delete on the QNAP files that are not present on lecs2]
+
+Add the ‘--dry-run’ parameter to just know ahead what will be done without executing anything
+
+
+to exit:
+press exit

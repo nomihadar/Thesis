@@ -1,0 +1,74 @@
+
+#move files from list
+find path -name "*.aln" > list.txt
+xargs mv -t destination_path < list.txt OR
+xargs rm < list.txt
+
+#find in files 
+grep -rnw '/path/to/somewhere/' -e 'pattern'
+
+#go back to last dir_name
+cd - 
+
+#connect to other node 
+ssh compute-7-0
+
+#for graphic such pylab you have to load gcc
+module load gcc/gcc493\n
+
+#delete all files ends with 
+find . -name "*Checkpoint*" -type f -delete
+
+#remove all directories with name
+find . -name dir_name -type d -delete
+or:
+find . -name dir_name -exec rm -rf {} \;
+	#Test it first using ls to list:
+find . -name a -exec ls {} \;
+
+#remove all files except:
+find . ! -name '*.sh' ! -name '*.fasta' -type f -delete
+
+#remove all directories and subdirectories
+rm -rf letters/
+
+#status of finished job
+qacct -j job_id
+
+# to see how much space left in disk for the entire group
+df -h .
+
+#to check the modules available 
+module avail            #program languages
+ls /share/apps/ #all modules 
+or
+ls /share/apps/bin
+
+#and after this choose the wanted module for example
+module load R/R301
+module load python/python-2.7.6
+module load python/python-3.3.0
+
+#comments in python
+ctrl+shift+q
+#uncomment 
+ctrl+q
+
+#plots in python
+import seaborn
+import matplotlib.pyplot as plt
+
+#  /share/apps/bin/FastTree 
+setenv PATH /share/apps/bin/FastTree:$PATH
+
+setenv PATH /share/apps/mafft-7.149-with-extensions/bin:$PATH
+unsetenv MAFFT_BINARIES
+
+#see environmental paths
+printenv PATH
+
+
+#install softwares that wants to change the bin and I don't have the sudo permission,
+then crate a new directory and give it as a path as follow: 
+make prefix=absolute_path_of_new_directory install
+https://stackoverflow.com/questions/3239343/make-install-but-not-to-default-directories 

@@ -1,0 +1,15 @@
+#SVN
+
+when creating a new folder in the server to be synchronized with the SVN:
+/user/bin/svn co /usr/bin/svn co http://host-ibis2.tau.ac.il/pupkoSVN/trunk/scripts/mayrose_lab/Nomi/code 
+
+"code" is the name of the new folder
+
+when adding a new script:
+/usr/bin/svn add code/newfile
+
+for commit changes:
+/usr/bin/svn commit code/*.* -m "changing stam"
+
+for update
+/usr/bin/svn update code

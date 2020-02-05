@@ -1,0 +1,50 @@
+#mafft
+module load mafft/mafft7310
+
+#guidance
+/share/apps/guidance.v1.41/
+
+#trimAL
+/groups/pupko/haim/Programs/trimAl/source/trimal
+
+#PHLAWD - need configuration file + known file
+PHLAWD assemble configfile
+
+#RAxml
+raxmlHPC -m GTRGAMMA -p 12345 -s dna.phy -# 20 -n T6
+
+#examl - needs to load:
+module load rocks-openmpi
+
+#phylip
+/share/apps/phylip-3.696/script.name
+for exmple:
+/share/apps/phylip-3.696/dnapars
+
+#FastTreeMP
+module load gcc/gcc493 than FastTreeMP
+
+PDA: 
+pda tree_path output_name -k #
+-k # is the number of species we want to sample 
+
+#spartaABC
+/groups/pupko/elilevy/pupkoSVN/trunk/programs/SpartaABC/SpartaABC.doubleRep config_file
+
+#jmodel test
+java -jar /groups/itay_mayrose/shiranabad/applications/jmodeltest-2.1.7/jModelTest.jar -d MSA_FILE -g 4 -i -f -AIC
+
+#indelible
+echo control.txt | /groups/pupko/haim/Programs/indelible/INDELibleV1.03/src/indelible
+
+#indel-seq-gen
+/share/apps/indel-seq-gen-2.1.03/src/indel-seq-gen
+
+#Ktreedist
+perl /share/apps/Ktreedist_v1/Ktreedist.pl
+
+#R - execute file. pay attention that in libraray are depend on the R version
+module load R/R342
+/share/apps/R342/bin/R CMD BATCH get_specias.R outfile_name
+or with arguments 
+ R CMD BATCH --no-save --no-restore '--args a=""' ~/code/get_species_by_rank_by_input.R temp.txt

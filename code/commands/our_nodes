@@ -1,0 +1,12 @@
+To know which nodes are ours (lecs2/jekyl) type the following:
+qconf -shgrp_tree @comp7.itaym
+
+Or, remember that for lecs2 we have 4-20 to 4-25 and for jekyl we have 7-0 to 7-11.
+Or, call Pini.
+
+​Jekyl
+compute-7-0 to 7-11
+compute-8-11 to 8-13
+
+Lecs2
+Compute-4-21 to 4-24

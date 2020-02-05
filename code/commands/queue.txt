@@ -1,0 +1,64 @@
+
+#show jobs of other users
+alias q 'perl /groups/pupko/haim/pupkoSVN/trunk/scripts/q.pl'
+then press q
+
+#queue.sh file:
+
+"""
+
+#!/bin/tcsh
+
+#$ -N Nomi
+#$ -S /bin/tcsh
+#$ -cwd
+#$ -p -1
+#$ -l itaym
+#$ -e $JOB_NAME.$JOB_ID.ER
+#$ -o $JOB_NAME.$JOB_ID.OU
+#$ -l h=!(compute-8-13|compute-7-11) #don;t send to those computers
+
+python ./my.py 
+
+"""
+
+#qdel
+-u nomihadar (deletes all my jobs)
+
+#summerize:
+qstat -g c
+
+#change priority
+qalter -p -1 -u username
+
+#change node 
+qalter h!="comp7.itaym.q@compute-7-1.local" -u nomihadar
+
+#status of running job 
+qstat -j job_id
+
+#status of finished job
+qacct -j job_id
+
+#see %cpu
+top
+
+#delete jobs by grepping qstat output and sending jobid to qdel
+# http://stackoverflow.com/questions/4588961/delete-jobs-by-grepping-qstat-output-and-sending-jobid-to-qdel
+qstat | awk '$6 ~ "01/06" {cmd="qdel " $1; system(cmd); close(cmd)}'
+
+#when using threards:
+
+#!/bin/tcsh
+
+#$ -N Nomi
+#$ -S /bin/tcsh
+#$ -cwd
+#$ -p -1
+#$ -l itaym
+#$ -e $JOB_NAME.$JOB_ID.ER
+#$ -o $JOB_NAME.$JOB_ID.OU
+#$ -pe orte 20
+
+mpiexec python ./my.py 
+
