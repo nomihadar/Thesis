@@ -6,8 +6,8 @@ Repository contains the following:
 
 
 <p align="center">
- **Towards realistic sequence simulations for the**<br/>
- **reconstruction of mega phylogenies**<br/>
+ <p align="center"><h2>Towards realistic sequence simulations for the<br/></h2></p>
+ <h2>reconstruction of mega phylogenies</h2><br/>
 </p>
 
 <p align="center">
