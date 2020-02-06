@@ -1,8 +1,4 @@
-# Thesis
-
-<p align="center">
-<h2>Towards realistic sequence simulations for the reconstruction of mega phylogenies<br/></h2>
-</p>
+## Towards realistic sequence simulations for the reconstruction of mega phylogenies
 
 <p align="center">
  Thesis submitted towards the M.Sc. degree in Bioinformatics<br/>
@@ -26,10 +22,10 @@
 </p>
 
 
-### Repository contains the following:
-- Thesis file.
-- Code used while working.  
-- Posters and presentations presented during the master.
+### Repository content:
+- [Thesis file]("Thesis June 2018.pdf").
+- [Code]("code/") used while working.  
+- [Posters]("posters/") and [presentations]("presentations/") presented during the master.
 
 
 ### [Paper-pulp cat](cathesis/) covered with thesis drafts 
