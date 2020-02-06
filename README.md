@@ -1,9 +1,4 @@
 # Thesis
-Repository contains the following:
-- Thesis file.
-- Code used while working.  
-- Posters and presentations presented during the master.
-
 
 <p align="center">
 <h2>Towards realistic sequence simulations for the reconstruction of mega phylogenies<br/></h2>
@@ -29,6 +24,12 @@ Repository contains the following:
 <p align="center">
  June 2018<br/>
 </p>
+
+
+### Repository contains the following:
+- Thesis file.
+- Code used while working.  
+- Posters and presentations presented during the master.
 
 
 ### [Paper-pulp cat](cathesis/) covered with thesis drafts 
