@@ -1,18 +1,18 @@
 
-# Paper pulp cat, covered with thesis drafts...
+# Paperpulp cat, covered with thesis drafts...
 
 <p align="center">
-  <img width="605" height="807" src="IMG_20180704_092941_1.jpg">
+  <img width="299" height="400" src="IMG_20180704_092941_1.jpg">
 </p>
 
 <p align="center">
-  <img width="605" height="807" src="IMG_20180704_093043.jpg">
+  <img width="299" height="400" src="IMG_20180704_093043.jpg">
 </p>
 
 <p align="center">
-  <img width="605" height="807" src="IMG_20180704_093054.jpg">
+  <img width="299" height="400" src="IMG_20180704_093054.jpg">
 </p>
 
 <p align="center">
-  <img width="605" height="807" src="IMG_20180704_093049.jpg">
+  <img width="299" height="400" src="IMG_20180704_093049.jpg">
 </p>
