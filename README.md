@@ -31,10 +31,10 @@ Repository contains the following:
 </p>
 
 
-### Paper-pulp cat covered with thesis drafts 
+### [Paper-pulp cat](cathesis/) covered with thesis drafts 
 
 <p align="left">
-  <img width="299" height="400" src="IMG_20180704_092941_1.jpg">
+  <img width="299" height="400" src="cathesis/IMG_20180704_092941_1.jpg">
 </p>
 
 
