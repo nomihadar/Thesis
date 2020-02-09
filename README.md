@@ -19,6 +19,10 @@
 
 <p align="center">
  June 2018<br/>
+</p><br/>
+
+<p align="center">
+  <img width="299" height="400" src="cathesis/IMG_20180704_092941_1.jpg">
 </p>
 
 
@@ -26,11 +30,9 @@
 - [Thesis file]("Thesis_June_2018.pdf").
 - [Code]("code/") used while working.  
 - [Posters]("posters/") and [presentations]("presentations/") presented during the master.
-- Cute paper-pulp [cat](cathesis/) covered with thesis drafts 
+- [Cute paper-pulp cat](cathesis/) covered with thesis drafts 
 
-<p align="left">
-  <img width="299" height="400" src="cathesis/IMG_20180704_092941_1.jpg">
-</p>
+
 
 
 
