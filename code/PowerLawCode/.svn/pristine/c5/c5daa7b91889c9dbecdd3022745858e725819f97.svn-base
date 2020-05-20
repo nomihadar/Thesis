@@ -1,0 +1,79 @@
+import sys, os
+
+__author__ = 'Nomi'
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
+from defs import *
+from utils import rescale_branches
+from utils.runJobPower import run_job
+
+# -T num threads. never run it with more threads than
+# you have cores (processors/CPUs) available on your system!
+# pthread raxmlHPC-PTHREADS-SSE3 - in jekyl
+NUM_THREADS = 1
+NUM_ITERATIONS = 1
+
+# Models: GAMMA or CAT (GTRGAMMA / GTRCAT) for nucleotides
+# PROTGAMMAWAG for proteins
+MODEL = "GTRCAT"
+
+# an example to RAxML command:
+# raxmlHPC-PTHREADS-SSE3 -T {threads} -m {model} -p 12345 -s {msa_file} -n {name} -# {iterations}
+# raxmlHPC -m {model} -p 12345 -s {msa_file} -n {name} -# {iterations}
+# raxmlHPC -m GTRGAMMA -p 12345 -s dna.phy -# 20 -n T6
+MODULE = 'module load raXML'
+RAXML_CMD = 'raxmlHPC -s {msa_file} -m {model} -p 12345 -n {name}' #DO NOT touch arguments' order!
+
+def run_raxml(msa_path, model, output_name):
+    # RAxML command
+    RAxML_cmd = RAXML_CMD.format(msa_file=msa_path,
+                                model=model,
+                                name=output_name)
+                                #threads=NUM_THREADS,
+                                #iterations=NUM_ITERATIONS)
+
+    cmd = "{0}\n{1}\n".format(MODULE, RAxML_cmd)
+
+    # qsub command
+    run_job(cmd, "job_RAxML.sh")
+
+
+def run_on_paths_list(paths_file, model, output):
+
+    df = pd.read_csv(paths_file)
+    dirs = df[PATH_COL].tolist()
+
+    for dir in dirs:
+
+        os.chdir(dir)
+
+        if not os.path.exists(TREE_RAXML_DIR):
+            os.mkdir(TREE_RAXML_DIR)
+        os.chdir(TREE_RAXML_DIR)
+
+        infile = os.path.join(dir, REF_MSA_PHY)
+
+        run_raxml(infile, model, output)
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', required=True,
+                        help='path of MSA file or paths file')
+    parser.add_argument('-o', required=True,
+                        help='output name of files')
+    parser.add_argument('-model', required=True,
+                        help='substitution model')
+    parser.add_argument('-paths', action='store_true',
+                        help='if specified - input is df with list of paths')
+    args = parser.parse_args()
+
+    if args.paths:
+        run_on_paths_list(args.f, args.model, args.o)
+    else:
+        run_raxml(args.f, args.model, args.o)
+
+
+

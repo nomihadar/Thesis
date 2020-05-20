@@ -1,0 +1,77 @@
+import sys, os
+
+__author__ = 'Nomi'
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
+from defs import *
+from utils.msa_functions import get_msa_properties
+
+T01 = ['DB', 'path', 'ntaxa', 'length']
+TITLES = ['replicate', 'rep_ntaxa', 'rep_length']
+
+def msa_features_simulations(paths_file, output_name):
+
+    df1 = pd.read_csv(paths_file, index_col=0)
+    dirs = df1[PATH_COL].tolist()
+
+    exceptions = []
+    frames = []
+    for id in df1.index.values:
+
+        row = df1.loc[[id]]
+        block1 = pd.concat([row] * N_SIM)
+
+        print(block1)
+
+        dir = row[PATH_COL]
+        print (dir)
+        dir = row[PATH_COL][0]
+        print(dir)
+
+
+        data = {name: [] for name in TITLES}
+        for i in range(N_SIM):
+            file = INDELIBLE_TRUE.format(i=i)
+            msa_path = os.path.join(DATA_PATH, row[PATH_COL], SIMULATIONS_DIR, file)
+            print (msa_path)
+            try:
+                (n, length) = get_msa_properties(msa_path)
+            except:
+                exceptions.append(msa_path)
+                continue
+            data[TITLES[0]].append(i)
+            data[TITLES[1]].append(n)
+            data[TITLES[2]].append(length)
+
+        block2 = pd.DataFrame(data)
+        block2 = block2[TITLES]
+        block2.index = block2.index + 1
+
+        print (block2)
+        frames.append(pd.concat([block1, block2], axis=1))
+        break
+
+    '''
+    df2 = pd.DataFrame(data)
+    df2 = df2[TITLES]
+    df2.index = df2.index + 1
+
+    result = pd.concat([df1, df2], axis=1)
+    result.to_csv(output_name)
+    '''
+
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-f', required=False,
+                        help='file of paths')
+    parser.add_argument('-o', required=True,
+                        help='output name')
+    args = parser.parse_args()
+
+    msa_features_simulations(args.f, args.o)
+
+
+

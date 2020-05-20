@@ -1,0 +1,99 @@
+import sys, os
+
+__author__ = 'Nomi'
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
+from defs import *
+from utils.msa_functions import get_msa_properties
+
+NAMES = ['DB', 'path', 'ntaxa', 'length']
+NAMES_SIC = ['SIC', 'SIC_no_edges']
+
+def extend_sic(paths_file, output_name):
+
+    df1 = pd.read_csv(paths_file, index_col=0)
+    dirs = df1[PATH_COL].tolist()
+
+    data = {name: [] for name in NAMES_SIC}
+
+    for dir in dirs:
+        #numbers of indels
+        sic_file = os.path.join(dir, SIC_DIR, SIC_OUTPUT)
+        df = pd.read_csv(sic_file)
+
+        colname = COL_NAMES_SIC[1]
+        num_indels = df[colname].shape[0]
+        num_indels_not_inedge = df[df[colname] == False].shape[0]
+
+        data[NAMES_SIC[0]].append(num_indels)
+        data[NAMES_SIC[1]].append(num_indels_not_inedge)
+
+    df2 = pd.DataFrame(data)
+    df2 = df2[NAMES_SIC]
+    df2.index = df2.index + 1
+
+    print (df1)
+    print("\n")
+    print (df2)
+
+    result = pd.concat([df1, df2], axis=1)
+    result.to_csv(output_name)
+
+
+def main(root_path, output_name):
+
+    data = {name: [] for name in NAMES}
+    exceptions = []
+    #to_remove = []
+    for root, dirs, files in os.walk(root_path, topdown=True):
+        for file in files:
+            if file.endswith(REF_MSA_PHY):
+
+                msa_path = os.path.join(root, file)
+
+                try:
+                    (n, length) = get_msa_properties(msa_path)
+                except:
+                    exceptions.append(msa_path)
+                    continue
+
+                data[NAMES[1]].append(root)
+                data[NAMES[2]].append(n)
+                data[NAMES[3]].append(length)
+
+                db = ""
+                for db in DATA_BASES:
+                    if db in root:
+                        db = db
+                        break
+
+                data[NAMES[0]].append(db)
+
+    df = pd.DataFrame(data)
+    df = df[NAMES]
+    df.index = df.index + 1
+    df.to_csv(output_name)
+
+    d = {"exceptions": exceptions}
+    df = pd.DataFrame(d)
+    df.to_csv("exceptions.csv")
+
+    '''
+    d = {"to_remove": to_remove}
+    df = pd.DataFrame(d)
+    df.to_csv("to_remove.txt")
+    '''
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-root', required=False,
+                        help='root path')
+    parser.add_argument('-o', required=True,
+                        help='output name')
+    parser.add_argument('-f', required=False,
+                        help='file of paths')
+    args = parser.parse_args()
+
+    #main(args.root, args.o)
+    extend_sic(args.f, args.o)

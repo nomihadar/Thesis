@@ -1,0 +1,205 @@
+import sys, os
+
+__author__ = 'Nomi'
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
+from defs import *
+from utils.runJobPower import run_job
+from utils.utils import get_num_running_jobs, change_path_permissions_to_777
+from utils.msa_functions import get_msa_properties, get_num_indel_blocks
+
+CMD_PY = "python {script} -f {msa} -o {output} {edges}"
+MODULE = "module load perl/perl-5.26-new"
+CMD = 'perl {program_path}/SimpleIndelCode/IndelCoderHaimScript.pl {msa_file} SIC FILE ' \
+	  '{program_path}/SimpleIndelCode/indelCoder/indelCoder.V1.72 ' \
+	  '{edges} &> {output}.std'
+INFO_FILE = {0: ".SIC_CODED.info", 1: ".MASKED_START_END_INDELS.SIC_CODED.info"}
+
+
+def count_indels(msa_file, edges, output):
+	# edges is boolean
+	# 0=count, 1=don't count
+	# if the user specify "-no_edges" -> edges=True=1 -> don't count
+	cmd = CMD.format(program_path=PROGRAM_PATH,
+					 msa_file=msa_file,
+					 edges=int(edges),
+					 output=output)
+	call(cmd.split())
+
+
+def extract_data(info_file, msa_size, msa_length):
+
+	with open(info_file, 'r') as f:
+		content = f.read()
+	indel_blocks = content.split("ENDCHARACTER")
+
+	data = {name: [] for name in COL_NAMES_SIC}
+	for block in indel_blocks[:-1]:
+
+		start = re.search(r'Start position relative to MSA: (\d+)', block)
+		indel_start = int(start.group(1))
+
+		end = re.search(r'End position relative to MSA: (\d+)', block)
+		indel_end = int(end.group(1))
+
+		length = re.search(r'Length: (\d+)', block)
+		indel_length = int(length.group(1))
+
+		species = re.findall(r'Found in species', block)
+		num_species = len(species)
+		species_percent = num_species / msa_size #percent of total number of species
+
+		#boolean if found in one of the edges
+		if indel_start == 0 or indel_end == msa_length:
+			edge_indel = True
+		else:
+			edge_indel = False
+
+		data[COL_NAMES_SIC[0]].append(indel_length)
+		data[COL_NAMES_SIC[1]].append(edge_indel)
+		data[COL_NAMES_SIC[2]].append(indel_start)
+		data[COL_NAMES_SIC[3]].append(indel_end)
+		data[COL_NAMES_SIC[4]].append(species_percent)
+
+	return data
+
+def main(msa_file, edges, output):
+
+	#if MSA contains indels - exit
+	num_indels = get_num_indel_blocks(msa_file)
+	if num_indels == 0:
+		df = pd.DataFrame({"": [NO_INDELS]})
+		df.to_csv(output, header=None, index=None)
+		return 0
+
+	# cp the input to working directory
+	# because output is sent to to the wd
+	msa_file_copied = os.path.basename(msa_file)
+	copyfile(msa_file, msa_file_copied)
+
+	count_indels(os.path.abspath(msa_file_copied), edges, output)
+
+	#get MSA file
+	(n, length) = get_msa_properties(msa_file)
+
+	# extract data from the info file (one of SIC outputs)
+	info_file = "{}{}".format(msa_file_copied, INFO_FILE[int(edges)])
+	data = extract_data(info_file, n, length)
+
+	# save output
+	df = pd.DataFrame(data)
+	df = df[COL_NAMES_SIC]
+	df.index = df.index + 1
+	df.to_csv(output, float_format='%.3f')
+
+	#remove copied msa
+	os.remove(os.path.join(os.getcwd(), msa_file_copied))
+
+	'''
+	remove SIC outputs
+	for f in os.listdir(os.getcwd()):
+		pattern = "{}.*".format(msa_file_copied)
+		if re.search(pattern, f):
+			os.remove(os.path.join(os.getcwd(), f))
+	os.remove("gapsInfo.txt")
+	'''
+
+def run_on_paths_list(paths_file, output):
+
+	df = pd.read_csv(paths_file)
+	dirs = df[PATH_COL].tolist()
+
+	for dir in dirs:
+
+		os.chdir(dir)
+
+		if not os.path.exists(SIC_DIR):
+			os.mkdir(SIC_DIR)
+		os.chdir(SIC_DIR)
+
+		infile = os.path.join(DATA_PATH, dir, REF_MSA_PHY)
+		script_path = os.path.realpath(__file__)
+
+		cmd1 = CMD_PY.format(script=script_path, msa=infile,
+							 edges="", output=output)
+		cmd = "{0}\n{1}\n".format(MODULE, cmd1)
+
+		run_job(cmd, "job_SIC.sh")
+
+def run_on_paths_simulations(dic, output):
+
+	for id, rel_path in dic.items():
+
+		dir = os.path.join(DATA_PATH, rel_path, SIMULATIONS_DIR)
+		os.chdir(dir)
+		#print("running SIC for dataset (id={}):\n{}".format(id, dir))
+
+		if not os.path.exists(SIC_DIR):
+			os.mkdir(SIC_DIR)
+		os.chdir(SIC_DIR)
+
+		for i in range(1,N_SIM+1):
+			sub_dir = SIC_DIR_SIM.format(i)
+			sic_res_file = os.path.join(dir, sub_dir, output)
+
+			#if not os.path.exists(sic_res_file):    # output does not exist yet
+			if not os.path.exists(sub_dir):
+				os.mkdir(sub_dir)
+			os.chdir(sub_dir)
+
+			#replicate path
+			infile = os.path.join(dir, INDELIBLE_TRUE.format(i=i))
+			script_path = os.path.realpath(__file__)
+			cmd1 = CMD_PY.format(script=script_path, msa=infile,
+								 edges="", output=output)
+			cmd = "{0}\n{1}\n".format(MODULE, cmd1)
+			run_job(cmd, "job_SIC.sh")
+			os.chdir("../")
+
+			#else:
+			# #	print(sic_res_file, "already exist, NO need to run SIC again!")
+
+		if get_num_running_jobs() > 10000:
+			time.sleep(60)
+
+
+		'''
+		df = pd.read_csv(paths_file)
+		grouped = df.groupby(ID_COL)
+		for name, group in grouped:
+			for index, row in df.iterrows():
+				path = row.at[index,PATH_COL]
+				dir = os.path.join(DATA_PATH, path, SIMULATIONS_DIR)
+		'''
+
+
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description='')
+	parser.add_argument('-f', required=False,
+						help='alignment file or file of paths', default="")
+	parser.add_argument('-no_edges', action='store_true',
+						help='if specified do not include edges')
+	parser.add_argument('-paths', action='store_true',
+						help='if specified - input is df with list of paths')
+	parser.add_argument('--output', '-o', required=False,
+						help='output name', default=SIC_OUTPUT)
+	parser.add_argument('-simulations', required=False, action='store_true',
+						help='flag')
+	args = parser.parse_args()
+
+	if args.paths:
+		pass
+		run_on_paths_list(args.f, args.output)
+	elif args.simulations:
+		if args.f:
+			df = pd.read_csv(args.f)
+			dic = df.set_index(ID_COL)[PATH_COL].to_dict()
+		else:
+			dic = DIC
+		run_on_paths_simulations(dic, args.output)
+	else:
+		pass
+		main(args.f, args.no_edges, args.output)
+
+

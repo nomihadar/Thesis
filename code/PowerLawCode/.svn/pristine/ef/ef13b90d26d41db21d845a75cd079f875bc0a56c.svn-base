@@ -1,0 +1,54 @@
+import sys
+sys.path.append("/groups/itay_mayrose/danaazouri/PowerLawCode/")
+__author__ = 'Dana'
+
+from defs import *
+from utils.msa_functions import convert_fas_to_phylip
+
+
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description='parse selectome files')
+	parser.add_argument('--dir_path', '-f', help='directory path with all files')
+	parser.add_argument('--destination_path', '-d', help='destination directory path to save the output files')
+	args = parser.parse_args()
+
+	dirpath = args.dir_path
+	output_path = args.destination_path
+
+	exceptions = []
+	paths = []
+
+	for file_name in os.listdir(dirpath):
+
+		orig_path = os.path.join(dirpath, file_name)
+		paths.append(orig_path)
+
+		family_name = file_name.split(".")[0]
+		trans_id = file_name.split(".")[2] #transcription id
+
+		file_name_fas = "ref_msa_" + trans_id + ".aa.fas"
+		file_name_phy = "ref_msa_" + trans_id + ".aa.phy"
+
+		dest_dir = os.path.join(output_path, family_name)
+		if not os.path.exists(dest_dir):
+			os.mkdir(dest_dir)
+
+		dest_file_fas = os.path.join(dest_dir, file_name_fas)
+		dest_file_phy = os.path.join(dest_dir, file_name_phy)
+
+		shutil.copy2(orig_path, dest_file_fas)
+
+		try:
+			convert_sequences_ids(dest_file_fas, dest_file_phy)
+		except:
+			exceptions.append(dest_file_fas)
+			continue
+		#exit()
+
+		d = {"exceptions": exceptions}
+		df = pd.DataFrame(d)
+		df.to_csv("exceptions.csv")
+
+		d = {"paths": paths}
+		df = pd.DataFrame(d)
+		df.to_csv("paths.csv")

@@ -1,0 +1,66 @@
+import sys, os
+
+__author__ = 'Nomi'
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
+from defs import *
+from utils.msa_functions import get_msa_properties
+
+TITLES = ['DB', 'path', 'ntaxa', 'length']
+
+def msa_features(root_path, output_name):
+
+    data = {name: [] for name in TITLES}
+    exceptions = []
+    #to_remove = []
+    for root, dirs, files in os.walk(root_path, topdown=True):
+        for file in files:
+            if file.endswith(REF_MSA_PHY):
+
+                msa_path = os.path.join(root, file)
+
+                try:
+                    (n, length) = get_msa_properties(msa_path)
+                except:
+                    exceptions.append(msa_path)
+                    continue
+
+                data[TITLES[1]].append(root)
+                data[TITLES[2]].append(n)
+                data[TITLES[3]].append(length)
+
+                db = ""
+                for db in DATA_BASES:
+                    if db in root:
+                        db = db
+                        break
+
+                data[TITLES[0]].append(db)
+
+    df = pd.DataFrame(data)
+    df = df[TITLES]
+    df.index = df.index + 1
+    df.to_csv(output_name)
+
+    d = {"exceptions": exceptions}
+    df = pd.DataFrame(d)
+    df.to_csv("exceptions.csv")
+
+    '''
+    d = {"to_remove": to_remove}
+    df = pd.DataFrame(d)
+    df.to_csv("to_remove.txt")
+    '''
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-root', required=False,
+                        help='root path')
+    parser.add_argument('-o', required=True,
+                        help='output name')
+    args = parser.parse_args()
+
+    msa_features(args.root, args.o)
+
+

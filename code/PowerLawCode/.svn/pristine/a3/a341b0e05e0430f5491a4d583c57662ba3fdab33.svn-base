@@ -1,0 +1,59 @@
+import sys, os
+import fnmatch
+
+__author__ = 'Nomi'
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
+from defs import *
+
+TITLES = [ID_COL, 'SIC', 'SIC_no_edges']
+
+def simple_indel_coding(paths_file, output_name):
+
+    if paths_file:
+        df_paths = pd.read_csv(paths_file)
+        dic = df_paths.set_index(ID_COL)[PATH_COL].to_dict()
+    else:
+        dic = DIC
+
+    data = {name: [] for name in TITLES}
+    for id, rel_path in dic.items():
+
+        #numbers of indels
+        sic_file = os.path.join(DATA_PATH, rel_path, SIC_DIR, SIC_OUTPUT)
+        df = pd.read_csv(sic_file)
+
+        colname = COL_NAMES_SIC[1]
+        num_indels = df[colname].shape[0]
+        num_indels_not_inedge = df[df[colname] == False].shape[0]
+
+        data[TITLES[0]].append(id)
+        data[TITLES[1]].append(num_indels)
+        data[TITLES[2]].append(num_indels_not_inedge)
+
+    df = pd.DataFrame(data)
+    df = df[TITLES]
+    df.to_csv(output_name, index=False)
+
+def simple_indel_coding_simulations(paths_file, output_name):
+    pass
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-f', required=False,
+                        help='file of paths', default="")
+    parser.add_argument('-o', required=False,
+                        help='output name', default="summary.csv")
+    parser.add_argument('-simulations', required=False, action='store_true',
+                        help='flag')
+
+    args = parser.parse_args()
+
+    if args.simulations:
+        simple_indel_coding_simulations(args.f, args.o)
+    else:
+        simple_indel_coding(args.f, args.o)
+
+
+

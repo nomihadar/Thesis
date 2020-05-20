@@ -1,0 +1,81 @@
+import argparse
+import datetime
+import sys
+import os
+from subprocess import call
+
+sys.path.append("/groups/itay_mayrose/nomihadar/powerLaw/code/")
+
+from utils import rescale_branches
+from utils import runJob
+
+time = datetime.datetime.now().strftime('_%d-%m')
+OUTPUT_DIR = "RAxML_output"
+
+# -T num threads. never run it with more threads than
+# you have cores (processors/CPUs) available on your system!
+# pthread raxmlHPC-PTHREADS-SSE3 - in jekyl
+NUM_THREADS = 1
+
+NUM_ITERATIONS = 1
+
+# Models: GAMMA or CAT (GTRGAMMA / GTRCAT)
+MODEL = "GTRCAT"
+
+# an example to RAxML command:
+# raxmlHPC -m GTRGAMMA -p 12345 -s dna.phy -# 20 -n T6
+# raxmlHPC-PTHREADS-SSE3 -T {threads} -m {model} -p 12345 -s {msa_file} -n {name} -# {iterations}
+# raxmlHPC -m {model} -p 12345 -s {msa_file} -n {name} -# {iterations}
+MODULE_CMD = 'module load raXML\n'
+RAXML_CMD = 'raxmlHPC -s {msa_file} -m {model} -p 12345 -n {name}' #DO NOT touch arguments' order!
+
+#-# {iterations}
+# qsub command and arguments
+QSUB_CMD = "qsub {qsub_args}"
+QSUB_ARGS = """#!/bin/tcsh
+#$ -N RAxML
+#$ -S /bin/tcsh
+#$ -cwd
+#$ -l itaym
+#$ -p 0
+#$ -e $JOB_NAME.qsub.ER
+#$ -o $JOB_NAME.qsub.OU
+
+{cmd}
+"""
+
+# run raxml via queue
+def run_raxml(msa_path, files_name, model):
+    # RAxML command
+    RAxML_cmd = RAXML_CMD.format(threads=NUM_THREADS, msa_file=msa_path,
+                                model=model,
+                                name=files_name,
+                                iterations=NUM_ITERATIONS)
+
+    cmd = MODULE_CMD + RAxML_cmd
+
+    # qsub command
+    runJob.run_job(cmd, "job_RAxML.sh")
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-msa', required=True, help='path of MSA')
+    parser.add_argument('-name', required=True,
+                        help='name of files')
+    parser.add_argument('-model', required=True,
+                        help='substitution model')
+    args = parser.parse_args()
+
+    # create a directory to the output of this script
+    #if not os.path.exists(OUTPUT_DIR):
+    #    os.makedirs(OUTPUT_DIR)
+
+    # run RAxML
+    #os.chdir(OUTPUT_DIR)
+
+    run_raxml(args.msa, args.name, args.model)
+
+    #os.chdir("../")
+

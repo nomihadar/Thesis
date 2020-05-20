@@ -1,0 +1,124 @@
+import os, sys
+import time
+import re
+import argparse
+import pandas as pd
+import numpy as np
+from subprocess import call
+
+sys.path.append("/groups/itay_mayrose/nomihadar/powerLaw/code/")
+
+from utils import rescale_branches as rb
+from utils import createJobFileNomi
+
+# the first version outputs indels lengths
+INDELIBLE_CMD = '/groups/itay_mayrose/nomihadar/softwares/indelible/myindelible {control_file}'
+INDELIBLE_CMD = '/groups/pupko/haim/Programs/indelible/INDELibleV1.03/src/indelible {control_file}'
+
+FLAG = "INDELIBLE_END"
+
+CONTROL_FILE = """
+[TYPE] AMINOACID 1
+
+[SETTINGS]
+	[phylipextension] 	phy
+	[output]          	PHYLIP
+	[fileperrep]      	TRUE
+	[printrates] 		TRUE    
+
+[MODEL] mymodelname
+	[submodel] {submodel} 
+	[indelmodel] POW {A} {max_gap_length}
+	[indelrate] {IR}
+
+[TREE] mytree {tree} 
+
+[PARTITIONS] partitionname 
+	[mytree mymodelname {root_length}]
+
+[EVOLVE] partitionname {num_simulations} {output}
+"""
+
+def run_indelible(gene):
+    indelible_cmd = INDELIBLE_CMD.format(gene=gene,
+                                         control_file="control.txt")
+    # run_job.run_job(indelible_cmd, "job_indelible.sh")
+    call(indelible_cmd.split(" "))
+
+def get_indel_params(indel_file):
+
+    indels = pd.read_csv(indel_file, header=0)
+    rl = int(indels['rl'][0])
+    a = indels['a'][0]
+    ir = indels['ir'][0]
+
+    parameters = (rl, a, ir)
+    return parameters
+
+def fix_tree_branches(tree_path):
+    # get the tree for the control file
+    with open(tree_path, 'r') as f:
+        tree = f.read().splitlines()[0]
+    tree = rb.rescale_branches(tree)
+
+    return tree
+
+def create_control_file(model, gene, tree, indel_parameters,
+                        num_simulations, max_gap_len):
+
+    (rl, a, ir) = indel_parameters
+
+    # create the control file
+    control_file = CONTROL_FILE.format(submodel=model,
+                                       A="{:.10f}".format(a),
+                                       IR="{:.10f}".format(ir),
+                                       tree=tree,
+                                       root_length=rl,
+                                       max_gap_length=max_gap_len,
+                                       num_simulations=num_simulations,
+                                       output=gene)
+
+    with open('control.txt', 'w') as fout:
+        fout.write(control_file)
+
+def main(model, gene, tree_file, indel_model,
+         num_simulations, max_gap_len):
+
+    # read tree
+    tree = fix_tree_branches(tree_file)
+
+    # get the indel parameters
+    indel_parameters = get_indel_params(indel_model)
+
+    # create control file
+    create_control_file(model, gene, tree, indel_parameters,
+                         num_simulations, max_gap_len)
+
+    # run indelible
+    indelible_cmd = INDELIBLE_CMD.format(control_file="control.txt")
+    call(indelible_cmd.split())
+
+    # create a flag file
+    open(FLAG, 'w').close()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-model', required=True,
+                        help='substitution model')
+    parser.add_argument('-gene', required=True,
+                        help='name of gene')
+    parser.add_argument('-tree', required=True,
+                        help='path to tree')
+    parser.add_argument('-indel_model', required=True,
+                        help='path to file contains indel parameters')
+    parser.add_argument('-n', required=False, type=int,
+                        default=1, help='number of simulations')
+    parser.add_argument('-max_gap_len', required=False, type=int,
+                        default=50, help='max length of a gap block')
+
+    args = parser.parse_args()
+
+    main(args.model, args.gene, args.tree,
+         args.indel_model, args.n, args.max_gap_len)
+

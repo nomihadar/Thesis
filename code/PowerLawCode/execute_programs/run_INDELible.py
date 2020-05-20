@@ -1,0 +1,133 @@
+import os, sys
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
+from defs import *
+from utils import rescale_branches as rb
+from utils.runJobPower import run_job
+
+CMD_PY = "python {script} -sub_model {sub_model} " \
+         "-indel_model {indel_model} -tree {tree} -n {n} -o {output}"
+
+# the first version outputs indels lengths
+#INDELIBLE_CMD = '/groups/itay_mayrose/danaazouri/powerLawProject/Programs/myINDELibleV1.03/myindelible {control_file}'
+INDELIBLE_CMD = '/groups/itay_mayrose/danaazouri/powerLawProject/Programs/INDELibleV1.03/src/indelible {control_file}'
+
+FLAG = "INDELIBLE_END"
+N_SIMULATIONS = 30
+
+CONTROL_FILE_NAME = "control.txt"
+CONTROL_FILE = """
+[TYPE] AMINOACID 1
+
+[SETTINGS]
+	[phylipextension] 	phy
+	[output]          	PHYLIP
+	[fileperrep]      	TRUE
+	[printrates] 		TRUE    
+
+[MODEL] myModel
+	[submodel] {submodel} 
+	[indelmodel] POW {A} {max_gap_length}
+	[indelrate] {IR}
+
+[TREE] mytree {tree} 
+
+[PARTITIONS] partitionName
+	[mytree myModel {root_length}]
+
+[EVOLVE] partitionName {num_simulations} {output}
+"""
+
+def fix_tree_branches(tree_path):
+    # get the tree for the control file
+    with open(tree_path, 'r') as f:
+        tree = f.read().splitlines()[0]
+    tree = rb.rescale_branches(tree)
+    return tree
+
+def create_control_file(tree, sub_model, indel_model_file,
+                        n_simulations, output):
+
+    imodel = pd.read_csv(indel_model_file, header=0)
+    ir = "{:.6f}".format(imodel['ir'][0])
+    a = "{:.6f}".format(imodel['a'][0])
+    rl = int(imodel['rl'][0])
+    max_gap = int(imodel["max gap length"][0])
+
+    # create the control file
+    ctrl_file = CONTROL_FILE.format(
+            tree=tree,
+            submodel=sub_model,
+            A=a,
+            IR=ir,
+            root_length=rl,
+            max_gap_length=max_gap,
+            num_simulations=n_simulations,
+            output=output)
+
+    with open(CONTROL_FILE_NAME, 'w') as fout:
+        fout.write(ctrl_file)
+
+def main(tree_file, sub_model, indel_model_file, n_simulations, output):
+
+    # read tree
+    tree = fix_tree_branches(tree_file)
+
+    # create control file
+    create_control_file(tree, sub_model, indel_model_file,
+                        n_simulations, output)
+
+    # run indelible
+    indelible_cmd = INDELIBLE_CMD.format(control_file=CONTROL_FILE_NAME)
+    call(indelible_cmd.split())
+
+    # create a flag file
+    #open(FLAG, 'w').close()
+
+def run_on_paths_list(paths_file):
+
+    df = pd.read_csv(paths_file)
+    dirs = df[PATH_COL].tolist()
+
+    for dir in dirs:
+        os.chdir(dir)
+        if not os.path.exists(SIMULATIONS_DIR):
+            os.mkdir(SIMULATIONS_DIR)
+        os.chdir(SIMULATIONS_DIR)
+
+        indel_model = os.path.join(dir, SIMULATIONS_DIR, INDEL_MODEL_OUTPUT)
+        tree = os.path.join(dir, TREE_RAXML_DIR, TREE_FILE)
+
+        cmd = CMD_PY.format(script=os.path.realpath(__file__),
+                            tree=tree,
+                            sub_model="WAG",
+                            indel_model=indel_model,
+                            n=N_SIMULATIONS,
+                            output="sim01")
+
+        run_job(cmd, "job_indelible.sh")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-sub_model', required=False,
+                        help='substitution model')
+    parser.add_argument('-tree', required=False,
+                        help='path to tree')
+    parser.add_argument('-indel_model', required=False,
+                        help='path to file contains indel parameters')
+    parser.add_argument('-o', required=False,
+                        help='output name')
+    parser.add_argument('-n', required=False, type=int,
+                        default=1, help='number of simulations')
+    parser.add_argument('-f', required=False,
+                        help='file of paths')
+    parser.add_argument('-paths', action='store_true',
+                        help='if specified - input is df with list of paths')
+    args = parser.parse_args()
+
+    if args.paths:
+        run_on_paths_list(args.f)
+    else:
+        main(args.tree, args.sub_model, args.indel_model, args.n, args.o)
+

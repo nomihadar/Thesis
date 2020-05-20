@@ -1,0 +1,40 @@
+import sys, os
+
+__author__ = 'Nomi'
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
+from defs import *
+
+def simulations_parameters(paths_file, output_name):
+
+    df1 = pd.read_csv(paths_file, index_col=0)
+    dirs = df1[PATH_COL].tolist()
+
+    frames = []
+    for dir in dirs:
+        indel_file = os.path.join(DATA_PATH, dir, SIMULATIONS_DIR,
+                                  INDEL_MODEL_OUTPUT)
+        df = pd.read_csv(indel_file)
+        frames.append(df)
+
+    df2 = pd.concat(frames)
+    df2 = df2.reset_index(drop=True)
+    df2.index = df2.index + 1
+
+    result = pd.concat([df1, df2], axis=1)
+    result.to_csv(output_name)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-f', required=False,
+                        help='file of paths')
+    parser.add_argument('-o', required=True,
+                        help='output name')
+    args = parser.parse_args()
+
+    simulations_parameters(args.f, args.o)
+
+
+

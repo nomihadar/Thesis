@@ -1,0 +1,173 @@
+import sys, os
+import fnmatch
+
+__author__ = 'Nomi'
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
+from defs import *
+from utils.msa_functions import get_msa_properties
+
+T01 = ['DB', 'path', 'ntaxa', 'length']
+T02 = ['SIC', 'SIC_no_edges']
+T03 = ['replicate', 'ntaxa', 'length']
+
+def extend_simulations_parameters(paths_file, output_name):
+
+    df1 = pd.read_csv(paths_file, index_col=0)
+    dirs = df1[PATH_COL].tolist()
+
+    frames = []
+    for dir in dirs:
+        indel_file = os.path.join(dir, SIMULATIONS_DIR, INDEL_MODEL_OUTPUT)
+        df = pd.read_csv(indel_file)
+        frames.append(df)
+
+    df2 = pd.concat(frames)
+    df2 = df2.reset_index(drop=True)
+    df2.index = df2.index + 1
+
+    result = pd.concat([df1, df2], axis=1)
+    result.to_csv(output_name)
+
+
+def extend_sic(paths_file, output_name):
+
+    df1 = pd.read_csv(paths_file, index_col=0)
+    dirs = df1[PATH_COL].tolist()
+
+    data = {name: [] for name in T02}
+    for dir in dirs:
+        #numbers of indels
+        sic_file = os.path.join(dir, SIC_DIR, SIC_OUTPUT)
+        df = pd.read_csv(sic_file)
+
+        colname = COL_NAMES_SIC[1]
+        num_indels = df[colname].shape[0]
+        num_indels_not_inedge = df[df[colname] == False].shape[0]
+
+        data[T02[0]].append(num_indels)
+        data[T02[1]].append(num_indels_not_inedge)
+
+    df2 = pd.DataFrame(data)
+    df2 = df2[T02]
+    df2.index = df2.index + 1
+
+    result = pd.concat([df1, df2], axis=1)
+    result.to_csv(output_name)
+
+def msa_features_simulations(paths_file, output_name):
+
+    df1 = pd.read_csv(paths_file, index_col=0)
+    dirs = df1[PATH_COL].tolist()
+
+    exceptions = []
+    frames = []
+    for index, row in df1.iterrows():
+        dir = row[PATH_COL]
+
+    #for dir in dirs:
+        data = {name: [] for name in T03}
+
+        for i in range(N_SIM):
+            file = INDELIBLE_TRUE.format(i=i)
+            msa_path = os.path.join(row[PATH_COL], SIMULATIONS_DIR, file)
+
+            try:
+                (n, length) = get_msa_properties(msa_path)
+            except:
+                exceptions.append(msa_path)
+                continue
+
+            data[T03[0]].append(i)
+            data[T03[1]].append(n)
+            data[T03[2]].append(length)
+
+        block1 = pd.concat([row]*N_SIM)
+
+        block2 = pd.DataFrame(data)
+        block2 = block2[T03]
+        block2.index = block2.index + 1
+
+        print (block1)
+        print (block2)
+        frames.append(pd.concat([block1, block2], axis=1))
+
+    '''
+    df2 = pd.DataFrame(data)
+    df2 = df2[T03]
+    df2.index = df2.index + 1
+
+    result = pd.concat([df1, df2], axis=1)
+    result.to_csv(output_name)
+    '''
+
+def msa_features(root_path, output_name):
+
+    data = {name: [] for name in T01}
+    exceptions = []
+    #to_remove = []
+    for root, dirs, files in os.walk(root_path, topdown=True):
+        for file in files:
+            if file.endswith(REF_MSA_PHY):
+
+                msa_path = os.path.join(root, file)
+
+                try:
+                    (n, length) = get_msa_properties(msa_path)
+                except:
+                    exceptions.append(msa_path)
+                    continue
+
+                data[T01[1]].append(root)
+                data[T01[2]].append(n)
+                data[T01[3]].append(length)
+
+                db = ""
+                for db in DATA_BASES:
+                    if db in root:
+                        db = db
+                        break
+
+                data[T01[0]].append(db)
+
+    df = pd.DataFrame(data)
+    df = df[T01]
+    df.index = df.index + 1
+    df.to_csv(output_name)
+
+    d = {"exceptions": exceptions}
+    df = pd.DataFrame(d)
+    df.to_csv("exceptions.csv")
+
+    '''
+    d = {"to_remove": to_remove}
+    df = pd.DataFrame(d)
+    df.to_csv("to_remove.txt")
+    '''
+
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-root', required=False,
+                        help='root path')
+    parser.add_argument('-o', required=True,
+                        help='output name')
+    parser.add_argument('-f', required=False,
+                        help='file of paths')
+    parser.add_argument('-option', required=False,
+                        help='file of paths', default="main")
+    args = parser.parse_args()
+
+    if args.option == "main":
+        msa_features(args.root, args.o)
+    if args.option == "sic":
+        extend_sic(args.f, args.o)
+    if args.option == "simulations_parameters":
+        extend_simulations_parameters(args.f, args.o)
+    if args.option == "msa_features_simulations":
+        msa_features_simulations(args.root, args.o)
+
+
+

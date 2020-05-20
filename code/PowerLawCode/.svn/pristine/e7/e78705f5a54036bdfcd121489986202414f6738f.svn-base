@@ -1,0 +1,73 @@
+import sys, os
+
+__author__ = 'Nomi'
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
+from defs import *
+from utils.msa_functions import get_msa_properties
+
+NAMES = ['DB', 'path', 'ntaxa', 'length', 'SIC', 'SIC_no_edges']
+
+def main(root_path, output_name):
+
+    data = {name: [] for name in NAMES}
+    exceptions = []
+
+    for root, dirs, files in os.walk(root_path, topdown=True):
+        for file in files:
+            if file.endswith(REF_MSA_PHY):
+
+                msa_path = os.path.join(root, file)
+
+                try:
+                    (n, length) = get_msa_properties(msa_path)
+                except:
+                    exceptions.append(msa_path)
+                    continue
+
+                if n == 1:
+                    continue
+
+                data[NAMES[1]].append(root)
+                data[NAMES[2]].append(n)
+                data[NAMES[3]].append(length)
+
+                if DB1 in root:
+                    data[NAMES[0]].append(DB1)
+                if DB2 in root:
+                    data[NAMES[0]].append(DB2)
+
+                #numbers of indels
+                names = [SIC_OUTPUT_WITH, SIC_OUTPUT_WITHOUT]
+                for i, name in zip([4, 5], names):
+                    sic_file = os.path.join(root, SIC_DIR, name)
+                    if os.stat(sic_file).st_size: #file is not empty
+                        num_indels = len(pd.read_csv(sic_file,header=None))
+                    else:
+                        num_indels = 0
+                    data[NAMES[i]].append(num_indels)
+
+
+
+    df = pd.DataFrame(data)
+    df = df[NAMES]
+    df.index = df.index + 1
+    df.to_csv(output_name)
+
+    d = {"exceptions": exceptions}
+    df = pd.DataFrame(d)
+    df.to_csv("exceptions.csv")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-root', required=True,
+                        help='root path')
+    parser.add_argument('-o', required=True,
+                        help='output name')
+
+    args = parser.parse_args()
+
+    main(args.root, args.o)
+

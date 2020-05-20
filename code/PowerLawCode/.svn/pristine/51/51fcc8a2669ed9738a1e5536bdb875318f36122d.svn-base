@@ -1,0 +1,89 @@
+import os, sys
+
+__author__ = 'Nomi'
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
+from defs import *
+from utils.utils import change_path_permissions_to_777
+
+# qsub command and arguments
+QSUB_ARGS = """#!/bin/tcsh
+#$ -N job 
+#$ -S /bin/tcsh
+#$ -cwd
+#$ -l itaym
+#$ -p {priority}
+#$ -e {ername}
+#$ -o $JOB_NAME.$JOB_ID.OU
+#$ -l h=!(compute-7-1|compute-7-0)
+
+module load python/anaconda3-5.0.0
+{cmd}
+
+"""
+
+#module load python/python-3.3.0
+
+SH_FILE = "job.sh"
+DIRECTORY = "run_{}"
+
+CMD = ''
+
+def run_job(cmd, sh_file=SH_FILE, priority=-1, ername="$JOB_NAME.$JOB_ID.ER"):
+    # create the arguments file for qsub
+    with open(sh_file, 'w') as f:
+        qsub_args = QSUB_ARGS.format(cmd=cmd, priority=priority, ername=ername)
+        f.write(qsub_args)
+
+    change_path_permissions_to_777(os.getcwd())
+
+    cmd = "qsub {sh_file}".format(sh_file=sh_file)
+    call(cmd.split(" "))
+
+
+def main(command, sh_file, multiply_jobs, priority):
+    if not multiply_jobs:
+        run_job(command, sh_file, priority)
+    else:
+        for i in range(1, num_runs + 1):
+            dir = DIRECTORY.format(i)
+            os.makedirs(dir)
+            os.chdir(dir)
+            run_job(command, sh_file, priority)
+            os.chdir("../")
+'''
+def run_on_paths_list(paths_file):
+
+    df = pd.read_csv(paths_file)
+    dirs = df[['path']]
+
+    for dir in dirs:
+
+        infile = os.path.join(dir, REF_MSA_PHY)
+        outdir = os.path.join(dir, DIR)
+        outfile1 = os.path.join(outdir, OUTPUT_WITH)
+        outfile2 = os.path.join(outdir, OUTPUT_WITHOUT)
+
+        os.mkdir(outdir)
+
+        main(infile, False, outfile1)
+        main(infile, True, outfile2)
+
+'''
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--command', '-cmd', required=False,
+                        default=CMD, help='command to run')
+    parser.add_argument('-n', default=0, type=int,
+                        help='number of times to run command')
+    parser.add_argument('--sh_file', '-sh', default=SH_FILE,
+                        required=False, help='name of .sh file')
+    parser.add_argument('--priority', '-p', default=0, type=int,
+                        required=False, help='priority of job')
+    args = parser.parse_args()
+
+    main(args.command, args.sh_file, args.n, args.priority)
+

@@ -1,0 +1,226 @@
+import os, sys
+sys.path.append("/groups/itay_mayrose/nomihadar/code/")
+#sys.path.append("/groups/itay_mayrose/danaazouri/PowerLawCode/")
+
+from defs import *
+from Bio import SeqIO
+
+__author__ = 'Nomi'
+
+MSA_LENGTH = "MSA length"
+NUM_GAPS = "total number of gaps"
+AVG_NUM_GAPS = "average number of gaps"
+
+SEQS_LENGTH = "average length of sequences"
+SEQS_LENGTH_STD = "STD of sequences length"
+SEQS_LENGTH_CV = "CV of sequences length"  # Coefficient of Variation
+
+MIN_GAP_LENGTH = "minimal gap length"
+MAX_GAP_LENGTH = "maximal gap length"
+
+MIN_SEQ_LENGTH = "minimal sequence length"
+MAX_SEQ_LENGTH = "maximal sequence length"
+
+GAPS_LENGTH = "average length of gaps"
+GAPS_LENGTH_STD = "STD of gaps length"
+GAPS_LENGTH_CV = "CV of gaps length"  # Coefficient of Variation
+
+START_EDGE = "fraction of sequences with gaps at the start edge"
+START_EDGE_LENGTH = "average length of gaps at start edges"
+END_EDGE = "fraction of sequences with gaps at the end edge"
+END_EDGE_LENGTH = "average length of gaps at end edges"
+MIDDLE_EDGE_LENGTH = "average length of gaps not in edges"
+
+OUTPUT = "alignment_statisitcs.csv"
+
+class AlignStat:
+    def __init__(self, file_name):
+        self.file_name = file_name
+        self.alignment_length = -1
+        self.average_seqs_length = -1
+        self.std_seqs_length = -1
+        self.cv_seqs_length = -1
+
+        self.average_num_gaps = -1
+
+        self.average_gaps_length = -1
+        self.std_gaps_length = -1
+        self.cv_gaps_length = -1
+
+        self.num_gaps = -1
+        self.min_gap_length = -1
+        self.max_gap_length = -1
+
+        self.min_seq_length = -1
+        self.max_seq_length = -1
+
+        self.frac_start_edges = -1  # % seqs with gaps at the start edge
+        self.average_start_edges_len = -1
+        self.average_middle_edges_len = -1
+        self.frac_end_edges = -1
+        self.average_end_edges_len = -1
+
+    def sequences(self, records):
+
+        # set alignment length
+        self.alignment_length = len(records[0].seq)
+
+        # set seqs lengths avg, std, min and max
+        seq_lengths = [len(record.seq.ungap("-")) for record in records]
+
+        self.min_seq_length = min(seq_lengths)
+        self.max_seq_length = max(seq_lengths)
+
+        self.average_seqs_length = np.average(seq_lengths)
+        self.std_seqs_length = np.std(seq_lengths)
+        self.cv_seqs_length = self.std_seqs_length / self.average_seqs_length
+
+    # self.cv_seqs_length = variation(seq_lengths)
+
+    def gaps(self, records):
+
+        # set average num gaps per sequence
+        num_gaps = [len(re.findall(r'(-+)', str(record.seq)))
+                    for record in records]
+        self.average_num_gaps = np.average(num_gaps)
+
+        # set total num gaps
+        self.num_gaps = sum(num_gaps)
+
+        # set average gaps length, min an max
+        gaps_lengths = []
+        for record in records:
+            gaps = re.findall(r'(-+)', str(record.seq))
+            gaps_lengths.extend([len(gap) for gap in gaps])
+        if not gaps_lengths:
+            gaps_lengths = 0
+        self.average_gaps_length = np.average(gaps_lengths)
+        self.std_gaps_length = np.std(gaps_lengths)
+        self.cv_gaps_length = self.std_gaps_length / self.average_gaps_length
+
+        # minimal and maximal lengths
+        self.min_gap_length = np.min(gaps_lengths)
+        self.max_gap_length = np.max(gaps_lengths)
+
+    # gaps at edges
+    def edges(self, records):
+
+        start_lengths = []
+        end_lengths = []
+        middle_lengths = []
+        for record in records:
+            seq = str(record.seq)
+
+            regex = re.search("(-*)(.*?)(-*$)", seq)
+            start_edge = len(regex.group(1))
+            end_edge = len(regex.group(3))
+
+            if start_edge:
+                start_lengths.append(start_edge)
+            if end_edge:
+                end_lengths.append(end_edge)
+
+            middle = regex.group(2)
+            gaps = re.findall(r'(-+)', middle)
+            middle_lengths.extend([len(gap) for gap in gaps])
+
+        self.frac_start_edges = np.count_nonzero(start_lengths) / len(records)  # % seqs with gaps at the start edge
+        self.average_start_edges_len = np.average(start_lengths)
+
+        self.frac_end_edges = np.count_nonzero(end_lengths) / len(records)
+        self.average_end_edges_len = np.average(end_lengths)
+
+        self.average_middle_edges_len = np.average(middle_lengths)
+
+    def to_dataframe(self):
+
+        dict = {MSA_LENGTH: [self.alignment_length],
+                SEQS_LENGTH: [self.average_seqs_length],
+                SEQS_LENGTH_STD: [self.std_seqs_length],
+                SEQS_LENGTH_CV: [self.cv_seqs_length],
+                MIN_SEQ_LENGTH: [self.min_seq_length],
+                MAX_SEQ_LENGTH: [self.max_seq_length],
+
+                NUM_GAPS: [self.num_gaps],
+                AVG_NUM_GAPS: [self.average_num_gaps],
+                GAPS_LENGTH: [self.average_gaps_length],
+                GAPS_LENGTH_STD: [self.std_gaps_length],
+                GAPS_LENGTH_CV: [self.cv_gaps_length],
+                MIN_GAP_LENGTH: [self.min_gap_length],
+                MAX_GAP_LENGTH: [self.max_gap_length],
+
+                START_EDGE: [self.frac_start_edges],
+                START_EDGE_LENGTH: [self.average_start_edges_len],
+                END_EDGE: [self.frac_end_edges],
+                END_EDGE_LENGTH: [self.average_end_edges_len],
+                MIDDLE_EDGE_LENGTH: [self.average_middle_edges_len]
+                }
+
+        df = pd.DataFrame(dict, index=[self.file_name])
+
+        return df
+
+def get_foramt(path):
+    with open(path, 'r') as f:
+        line = f.readline()
+    if ">" in line:
+        return "fasta"
+    return "phylip"
+
+def compute_statistics(align):  # align file
+
+    records = list(SeqIO.parse(align, get_foramt(align)))
+
+    # get the name of the alignment file
+    file_name = os.path.basename(align)
+
+    # create object and compute statistics
+    stats = AlignStat(file_name)
+
+    stats.sequences(records)
+    stats.gaps(records)
+    stats.edges(records)
+
+    return stats.to_dataframe()
+
+def many_alignments(paths):
+    if not isinstance(paths, list):
+        with open(paths, 'r') as f:
+            paths = f.read().splitlines()
+
+    frames = [compute_statistics(path)
+              for path in paths]
+    stats_df = pd.concat(frames)
+
+    # compute means
+    stats_means = {column: [stats_df[column].mean()]
+                   for column in stats_df}
+    stats_means_df = pd.DataFrame(stats_means)
+
+    # ["mean", "sd"] * len(dict)
+
+    return (stats_df, stats_means_df)
+
+def main(alignment, paths=False, output_file=OUTPUT):
+    if paths:  # file contains paths of alignments
+        (stats_df, stats_means_df) = many_alignments(alignment)
+        s = output_file.split('.')
+        output_file2 = s[0] + "_means." + s[1]
+        stats_means_df.to_csv(output_file2, sep=',', index=False)
+    else:  # one file
+        stats_df = compute_statistics(alignment)
+
+    stats_df = stats_df.round(2)
+    stats_df.to_csv(output_file, sep=',')
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--alignment', '-f', required=True,
+                        help='an alignment file')
+    parser.add_argument('-paths', action='store_true',
+                        help='file with paths of alignments')
+    parser.add_argument('-o', required=False,
+                        default=OUTPUT, help='output name')
+    args = parser.parse_args()
+
+    main(args.alignment, args.paths, args.o)

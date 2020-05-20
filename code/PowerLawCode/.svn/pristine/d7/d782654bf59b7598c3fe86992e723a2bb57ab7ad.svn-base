@@ -1,0 +1,75 @@
+import os, sys, argparse
+import pandas as pd
+
+__author__ = 'Nomi'
+
+sys.path.append("/groups/itay_mayrose/nomihadar/powerLaw/code/")
+
+from defs import *
+from utils.msa_functions import *
+
+DB1 = "Selectome"
+DB2 =  "PANDIT"
+
+def read_msa(path):
+    records = list(SeqIO.parse(path, PHYLIP_FORMAT))
+    n = len(records)
+    length = len(records[0])
+    return (n, length)
+
+def main(root_path, output_name):
+
+    exceptions = []
+
+    paths = []
+    ntaxa = []
+    lengths = []
+    database = []
+
+    for root, dirs, files in os.walk(root_path, topdown=True):
+        for file in files:
+            if file.endswith(PHYLIP_SUFFIX):
+
+                msa = get_msa_from_file(os.path.join(root, file))
+                if not msa:
+                    #cmd = "rm -rf {}".format(sh_file=root)
+                    #call(cmd.split(" "))
+                    exceptions.append(root)
+                    continue
+
+                (n, length) = get_msa_properties(msa)
+
+                paths.append(root)
+                ntaxa.append(n)
+                lengths.append(length)
+
+                if DB1 in root:
+                    database.append(DB1)
+                if DB2 in root:
+                    database.append(DB2)
+
+    data = {'DB': database,
+            'path': paths,
+            'ntaxa': ntaxa,
+            'length': lengths}
+    df = pd.DataFrame(data)
+    df = df[['DB', 'path', 'ntaxa', 'length']]
+    df.index = df.index + 1
+    df.to_csv(output_name)
+
+    d = {"exceptions": exceptions}
+    df = pd.DataFrame(d)
+    df.to_csv("exceptions.csv")
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-root',required=True,
+						help='root path')
+    parser.add_argument('-o', required=True,
+                        help='output name')
+
+    args = parser.parse_args()
+
+    main(args.root, args.o)
+

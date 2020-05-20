@@ -1,0 +1,68 @@
+import os, sys, argparse
+from subprocess import call
+
+__author__ = 'Nomi'
+
+sys.path.append("/groups/itay_mayrose/nomihadar/powerLaw/code/")
+
+# qsub command and arguments
+QSUB_ARGS = """#!/bin/tcsh
+#$ -N job 
+#$ -S /bin/tcsh
+#$ -cwd
+#$ -l itaym
+#$ -p {priority}
+#$ -e {ername}
+#$ -o $JOB_NAME.$JOB_ID.OU
+#$ -l h=!(compute-7-1|compute-7-0)
+
+module load python/anaconda3-5.0.0
+
+{cmd}
+
+"""
+
+#module load python/anaconda3-5.0.0 module load python/python-3.3.0
+
+SH_FILE = "job.sh"
+DIRECTORY = "run_{}"
+
+CMD = 'python ~/powerLaw/code/data_processing/arrange_selectome_db.py -f Selectome_v06_Drosophila-aa_unmasked -d .'
+
+
+def run_job(cmd, sh_file=SH_FILE, priority=-1, ername="$JOB_NAME.$JOB_ID.ER"):
+    # create the arguments file for qsub
+    with open(sh_file, 'w') as f:
+        qsub_args = QSUB_ARGS.format(cmd=cmd, priority=priority, ername=ername)
+        f.write(qsub_args)
+
+    cmd = "qsub {sh_file}".format(sh_file=sh_file)
+    call(cmd.split(" "))
+
+
+def main(command, sh_file, multiply_jobs, priority):
+    if not multiply_jobs:
+        run_job(command, sh_file, priority)
+    else:
+        for i in range(1, num_runs + 1):
+            dir = DIRECTORY.format(i)
+            os.makedirs(dir)
+            os.chdir(dir)
+            run_job(command, sh_file, priority)
+            os.chdir("../")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--command', '-cmd', required=False,
+                        default=CMD, help='command to run')
+    parser.add_argument('-n', default=0, type=int,
+                        help='number of times to run command')
+    parser.add_argument('--sh_file', '-sh', default=SH_FILE,
+                        required=False, help='name of .sh file')
+    parser.add_argument('--priority', '-p', default=0, type=int,
+                        required=False, help='priority of job')
+    args = parser.parse_args()
+
+    main(args.command, args.sh_file, args.n, args.priority)
+

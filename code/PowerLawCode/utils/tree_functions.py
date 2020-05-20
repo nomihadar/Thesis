@@ -1,0 +1,128 @@
+import sys, os
+sys.path.append(os.path.dirname(sys.path[0]))
+__author__ = 'Dana'
+
+from defs import *
+from ete3 import Tree
+
+
+def get_newick_tree(tree):
+	"""
+	:param tree: newick tree string or txt file containing one tree
+	:return:	tree: a string of the tree in ete3.Tree format
+	"""
+	if os.path.exists(tree):
+		with open(tree, 'r') as tree_fpr:
+			tree = tree_fpr.read().strip()
+	return tree
+
+
+def rescale_tree_branch_lengths(tree, factor):
+	"""
+	:param tree: newick tree string or txt file containing one tree
+	:param factor: the factor by which to multiply all branch lengths in tree
+	:return:	reformatted_tree: a string of the scaled tree in Newick format
+	"""
+	if type(tree) == str:
+		tree = Tree(get_newick_tree(tree), format=1)
+	tree_root = tree.get_tree_root()
+	for node in tree_root.iter_descendants(): # the root dist is 1.0, we don't want it
+		node.dist = node.dist * factor
+	return tree.write(format=1, dist_formatter="%.10f")
+
+
+def reroot_tree(tree, outgroup_name):
+	if type(tree) == str:
+		tree = Tree(get_newick_tree(tree), format=1)
+	tree.set_outgroup(tree & outgroup_name)
+	return tree
+
+
+def scale_tree_to_length(tree, target_dist, outgroup_name=None, scaling_method=ASR_SCALING_MODE):
+	"""
+	:param tree:  newick tree string or txt file containing one tree OR ete3.Tree object
+	:param target_dist: numeric, the desired total tree distance
+	:param outgroup_name: the name of a tree node if tree needs to be rooted,
+	                      otherwise would calculate the distance from the inferred root (acoorsding to the newick order)
+	:param scaling_method: "height" for longest distance from root to leaf, "tbl" for total branch lengths
+	:return: a newick string of the rescaled tree
+	"""
+	t = Tree(get_newick_tree(tree), format=1)
+
+	if outgroup_name: # re-root tree
+		t = reroot_tree(t, outgroup_name)
+	root = t.get_tree_root()
+
+	if scaling_method.lower() == "tbl":
+		dist = get_total_branch_lengths(root)
+		dist2 = calc_branch_length(tree)[0]
+	elif scaling_method.lower() == "height":
+		dist = get_tree_height(root)
+
+	scaling_factor = target_dist / dist
+	rescaled_tree = rescale_tree_branch_lengths(tree, scaling_factor)
+
+	return rescaled_tree
+
+
+def get_tree_height(tree_root):
+	"""
+	:param tree_root: ete3 node; because we traverse only its descendants
+	(its dist is 1.0, we don't want it)
+	:return: longest distance from root to leaf
+	"""
+	# the two configurations are the same - I compared! (Shiran)
+	# current_length = 0
+	# for leaf in tree_root:
+	# 	current_length = max(current_length, tree_root.get_distance(leaf))
+	return tree_root.get_farthest_leaf()[1]
+
+
+def get_branch_lengths(tree):
+	"""
+	:param tree: Tree node or tree file or newick tree string;
+	:return: total branch lengths
+	"""
+	# TBL
+	if type(tree) == str:
+		tree = Tree(get_newick_tree(tree), format=1)
+	tree_root = tree.get_tree_root()
+	branches = []
+	for node in tree_root.iter_descendants(): # the root dist is 1.0, we don't want it
+		branches.append(node.dist)
+	return branches
+
+
+def get_total_branch_lengths(tree):
+	"""
+	:param tree: Tree node or tree file or newick tree string;
+	:return: total branch lengths
+	"""
+	branches = get_branch_lengths(tree)
+	return sum(branches)
+
+
+def rename_ids(tree_str, conversion_dict):
+	"""
+	:param tree_str:  Newick format tree string
+	:param conversion_dict: {current_id: new_id}
+	:return: an updated tree string
+	"""
+	for sp in conversion_dict:
+		tree_str = re.sub(sp + ":", conversion_dict[sp] + ":", tree_str)
+	return tree_str
+
+
+def calc_branch_length(tree):
+	branch_lengths = get_branch_lengths(tree)
+	N = len(branch_lengths)
+	total_BL = sum(branch_lengths)
+	mean_BL = total_BL/N
+
+	return total_BL, mean_BL
+
+
+if __name__ == '__main__':
+	print(rescale_tree_branch_lengths(
+		"(Sp44:0.001852,Sp1:0.001610,(Sp37:0.000000,((Sp35:0.001497,(Sp51:0.000000,((Sp50:0.000000,OutG:0.000000):0.000000,((Sp22:0.000000,(Sp23:0.000000,(Sp53:0.003584,(Sp33:0.000000,(Sp27:0.001493,(Sp32:0.000000,(Sp31:0.000000,((Sp29:0.000000,(Sp5:0.000000,(Sp9:0.000000,(Sp11:0.003716,Sp20:0.003719):0.000000):0.000000):0.000000):0.000000,(Sp30:0.000000,(Sp28:0.000000,Sp10:0.001855):0.000000):0.000000):0.000000):0.000000):0.001493):0.000000):0.000000):0.000000):0.000000):0.000000,(Sp24:0.000000,(((Sp2:0.000000,Sp21:0.000000):0.002989,(Sp26:0.001493,(Sp48:0.001864,(Sp54:0.003130,(Sp4:0.000000,Sp8:0.000000):0.001684):0.001500):0.001486):0.000000):0.000000,(Sp25:0.000000,(Sp6:0.000000,(Sp34:0.000000,((Sp52:0.009328,(Sp0:0.000000,Sp7:0.001682):0.000000):0.000000,(Sp3:0.001852,(Sp46:0.003712,(Sp45:0.001853,(Sp19:0.001856,(Sp18:0.000000,(Sp17:0.000000,(Sp16:0.000000,(Sp15:0.000000,(Sp14:0.000000,(Sp12:0.001857,Sp13:0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.004480):0.002986):0.002989):0.001489,(Sp40:0.000000,((Sp41:0.000000,(Sp42:0.000000,Sp47:0.005060):0.000000):0.000000,(Sp36:0.000000,(Sp43:0.001852,(Sp39:0.000000,Sp38:0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000):0.000000);",
+								1))

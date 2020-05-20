@@ -1,0 +1,63 @@
+#imports
+import os
+import numpy as np
+import re
+import matplotlib.pyplot as plt
+#import seaborn as sns
+import pandas as pd
+import scipy, math, random, time, copy, argparse, platform, logging, socket
+from subprocess import call
+from shutil import copyfile
+import shutil
+
+SEP = "/"
+
+PATH_COL = 'path'
+
+FASTA_FORMAT = "fasta"
+PHYLIP_FORMAT = "phylip-relaxed"
+NEXUS_FORMAT = "nexus"
+
+FASTA_SUFFIX = ".fas"
+PHYLIP_SUFFIX = ".phy"
+
+#REAL_MSA_PHY = "real_msa.phy"
+#REAL_MSA_FAS = "real_msa.fas"
+
+REF_MSA_PHY = "ref_msa.aa.phy"
+REF_MSA_FAS = "ref_msa.aa.fas"
+
+DB1 = "Selectome"
+DB2 = "PANDIT"
+
+SIC_DIR = "simple_indel_coding"
+SIC_OUTPUT_WITH = "sic_with_edges.csv"
+SIC_OUTPUT_WITHOUT = "sic_without_edges.csv"
+
+
+if platform.system() == 'Linux':
+
+	DATA_PATH = "<jekyl path>/data/"
+	CODE_PATH = "<>/code/"
+	SUMMARY_FILES_DIR = "<>/summary_files/"
+
+	#Nomi's computer
+	if os.path.exists(r"/groups/itay_mayrose/danaazouri/PowerLawCode"):  # in lab
+		DATA_PATH = r"/groups/itay_mayrose/danaazouri/powerLawProject/"
+		CODE_PATH = r"/groups/itay_mayrose/nomihadar/powerLaw/code/"
+
+	#elif os.path.exists(r"C:\Users\NomiHadar\Google Drive\אוניברסיטה\מחקר\PowerLawCode"): # laptop
+	#	CODE_PATH = r"C:\Users\NomiHadar\Google Drive\אוניברסיטה\מחקר\PowerLawCode"
+
+	SUMMARY_FILES_DIR = SEP.join([DATA_PATH, ""])
+
+else: 														#Dana's computers
+	if os.path.exists(r"D:\Users\Administrator\Dropbox\PowerLaw"):  # in lab
+		DATA_PATH = r"D:\Users\Administrator\Dropbox\PowerLaw\data\\"
+		CODE_PATH = r"D:\Users\Administrator\Dropbox\PowerLaw\code\\"
+	elif os.path.exists(r"C:\\Users\\ItayMNB3\\Dropbox\\PowerLaw"): # laptop
+		DATA_PATH = r"C:\\Users\\ItayMNB3\\Dropbox\\PowerLaw\\data\\"
+		CODE_PATH = r"C:\\Users\\ItayMNB3\\Dropbox\\PowerLaw\code\\"
+	SUMMARY_FILES_DIR = SEP.join([DATA_PATH, ""])
+
+
